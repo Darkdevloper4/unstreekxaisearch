@@ -722,36 +722,33 @@ export default function App() {
          }]);
     }
 
-    try {
-      let currentText = '';
-      const result = await generateSearchResponse(searchQuery, activeSessionId, (chunk) => {
-        currentText += chunk;
-        setMessages(prev => {
-           const newMsgs = [...prev];
-           const lastMsg = newMsgs[newMsgs.length - 1];
-           if (lastMsg.role === 'model') {
-             lastMsg.content = currentText;
-           }
-           return newMsgs;
-        });
+        try {
+      const response = await fetch('https://dsrvebvjqslshyaoinlt.supabase.co/functions/v1/search-ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: searchQuery }),
       });
+
+      const data = await response.json();
+      const fullAnswer = data.candidates[0].content.parts[0].text;
+      const sources = data.candidates[0].groundingMetadata?.searchEntryPoint?.renderedContent || "";
 
       setMessages(prev => {
         const newMsgs = [...prev];
         const lastMsg = newMsgs[newMsgs.length - 1];
-        if (lastMsg.role === 'model') {
-          lastMsg.content = result.text;
-          lastMsg.sources = result.sources;
+        if (lastMsg && lastMsg.role === 'model') {
+          lastMsg.content = fullAnswer;
+          lastMsg.sources = sources;
           lastMsg.isStreaming = false;
         }
         return newMsgs;
       });
-
     } catch (e) {
-      console.error(e);
+      console.error("Search Error:", e);
     } finally {
       setIsLoading(false);
       setQuery('');
+        }
     }
   };
 
