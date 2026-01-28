@@ -722,7 +722,7 @@ export default function App() {
          }]);
     }
 
-        try {
+            try {
       const response = await fetch('https://dsrvebvjqslshyaoinlt.supabase.co/functions/v1/search-ai', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -730,6 +730,8 @@ export default function App() {
       });
 
       const data = await response.json();
+      
+      // Variable names ko fix kiya
       const fullAnswer = data.candidates[0].content.parts[0].text;
       const sources = data.candidates[0].groundingMetadata?.searchEntryPoint?.renderedContent || "";
 
@@ -738,17 +740,16 @@ export default function App() {
         const lastMsg = newMsgs[newMsgs.length - 1];
         if (lastMsg && lastMsg.role === 'model') {
           lastMsg.content = fullAnswer;
-          lastMsg.sources = sources;
+          lastMsg.sources = sources; // Citations ke liye
           lastMsg.isStreaming = false;
         }
         return newMsgs;
       });
-    } catch (e) {
-      console.error("Search Error:", e);
+    } catch (err) {
+      console.error("Search Error:", err);
     } finally {
       setIsLoading(false);
       setQuery('');
-        }
     }
   };
 
