@@ -82,6 +82,7 @@ RULES:
     console.warn("Gemini Search/Chat Error:", error);
     
     // Fallback logic if 403 or tool error occurs
+    // We switch to a basic model for a graceful degradation, though context might be lost in fallback.
     try {
         const fallbackModel = 'gemini-3-flash-preview';
         const fallbackStream = await ai.models.generateContentStream({

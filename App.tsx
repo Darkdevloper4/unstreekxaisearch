@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   SearchIcon, UserIcon, GlobeIcon, ArrowRightIcon, 
   HistoryIcon, SettingsIcon, LayersIcon, CreditCardIcon, SparklesIcon, MenuIcon,
-  EditIcon, TrashIcon, PlusIcon, CheckIcon, XIcon, LogOutIcon, FolderIcon
+  EditIcon, TrashIcon, PlusIcon, CheckIcon, XIcon, LogOutIcon, FolderIcon, ShieldIcon
 } from './components/Icons';
 import { generateSearchResponse } from './services/geminiService';
 import { supabase } from './services/supabaseClient';
@@ -64,26 +64,22 @@ const SearchInput: React.FC<SearchInputProps> = ({ value, onChange, onSearch, la
   );
 };
 
-// --- Helper Component: Nav Button ---
-interface NavButtonProps {
+// --- Helper Component: Box Button for Full Screen Menu ---
+interface BoxButtonProps {
   icon: React.ReactNode;
   label: string;
-  active?: boolean;
   onClick: () => void;
 }
 
-const NavButton: React.FC<NavButtonProps> = ({ icon, label, active, onClick }) => (
+const BoxButton: React.FC<BoxButtonProps> = ({ icon, label, onClick }) => (
   <button 
     onClick={onClick}
-    className={`
-      flex items-center w-full px-4 py-3 mb-1 rounded-xl transition-all
-      ${active 
-        ? 'bg-streek-neon text-streek-black font-semibold' 
-        : 'text-streek-muted hover:text-streek-text hover:bg-streek-card'}
-    `}
+    className="flex flex-col items-center justify-center gap-3 bg-streek-card hover:bg-[#252525] border border-[#333] hover:border-streek-neon/50 rounded-2xl p-6 transition-all group aspect-square sm:aspect-auto sm:py-8"
   >
-    <span className="mr-3">{icon}</span>
-    {label}
+    <div className="p-3 bg-[#0F0F0F] rounded-full text-streek-neon group-hover:scale-110 transition-transform">
+      {icon}
+    </div>
+    <span className="font-bold text-white text-sm sm:text-base">{label}</span>
   </button>
 );
 
@@ -1387,7 +1383,7 @@ export default function App() {
                   <ArrowRightIcon className="w-4 h-4 text-streek-neon group-hover:translate-x-1 transition-transform" />
                </button>
             ) : (
-              // If logged in, show User Menu
+              // If logged in, show User Menu Button
               <button 
                 onClick={() => setUserMenuOpen(!userMenuOpen)}
                 className={`flex items-center gap-2 p-1.5 pr-3 rounded-full border transition-all ${userMenuOpen ? 'bg-streek-card border-streek-neon/50' : 'border-transparent hover:bg-streek-card'}`}
@@ -1400,36 +1396,100 @@ export default function App() {
               </button>
             )}
 
+            {/* --- FULL SCREEN MENU OVERLAY --- */}
             {userMenuOpen && isLoggedIn && (
-               <>
-                 <div className="fixed inset-0 bg-transparent z-40" onClick={() => setUserMenuOpen(false)}></div>
-                 <div className="absolute right-0 top-full mt-2 w-72 bg-[#151515] border border-[#333] rounded-2xl shadow-2xl p-3 z-50 animate-in slide-in-from-top-2 duration-200">
-                    <div className="p-3 mb-2 flex items-center gap-3 border-b border-[#333]">
-                        <div className="w-10 h-10 rounded-full bg-streek-card flex items-center justify-center overflow-hidden">
-                           <img src={userProfile?.avatar || 'https://picsum.photos/200/200'} alt="User" className="w-full h-full object-cover" />
-                        </div>
-                        <div>
-                           <div className="font-bold text-white text-sm line-clamp-1">{userProfile?.name}</div>
-                           <div className="text-xs text-streek-muted line-clamp-1">{userProfile?.streekx_id}</div>
-                        </div>
-                    </div>
-                    <div className="space-y-1">
-                      <NavButton icon={<UserIcon className="w-4 h-4" />} label="Profile" active={currentView === 'profile'} onClick={() => handleNavClick('profile')} />
-                      <NavButton icon={<HistoryIcon className="w-4 h-4" />} label="History" active={currentView === 'history'} onClick={() => handleNavClick('history')} />
-                      <NavButton icon={<LayersIcon className="w-4 h-4" />} label="Workspace" active={currentView === 'workspace'} onClick={() => handleNavClick('workspace')} />
-                      <NavButton icon={<SettingsIcon className="w-4 h-4" />} label="Preferences" active={currentView === 'preferences'} onClick={() => handleNavClick('preferences')} />
-                      <div className="my-2 border-t border-[#333]"></div>
-                      <NavButton icon={<CreditCardIcon className="w-4 h-4" />} label="Account" active={currentView === 'account'} onClick={() => handleNavClick('account')} />
-                      <button 
-                        onClick={handleLogout}
-                        className="flex items-center w-full px-4 py-3 mb-1 rounded-xl transition-all text-streek-muted hover:text-red-500 hover:bg-streek-card"
-                      >
-                        <span className="mr-3"><LogOutIcon className="w-4 h-4" /></span>
-                        Sign Out
-                      </button>
-                    </div>
+               <div className="fixed inset-0 z-[60] bg-streek-black animate-in fade-in duration-200 overflow-y-auto">
+                 {/* Top Bar */}
+                 <div className="flex justify-between items-center p-4 border-b border-[#333]">
+                   <div className="flex items-center gap-2">
+                       <div className="w-8 h-8 bg-streek-neon rounded-lg flex items-center justify-center text-streek-black font-bold text-xl font-display">S</div>
+                       <span className="font-display font-bold text-xl tracking-tight">Streek<span className="text-streek-neon">X</span></span>
+                   </div>
+                   <button 
+                     onClick={() => setUserMenuOpen(false)}
+                     className="p-2 rounded-full bg-[#1A1A1A] text-streek-muted hover:text-white"
+                   >
+                     <XIcon className="w-6 h-6" />
+                   </button>
                  </div>
-               </>
+
+                 <div className="p-6 max-w-4xl mx-auto flex flex-col gap-8 pb-12">
+                   
+                   {/* 1. Identity Section */}
+                   <div className="flex flex-col items-center justify-center text-center py-4">
+                      <div className="w-24 h-24 rounded-full border-4 border-streek-card overflow-hidden mb-4 shadow-[0_0_20px_rgba(212,255,91,0.2)]">
+                         <img src={userProfile?.avatar} alt="Profile" className="w-full h-full object-cover" />
+                      </div>
+                      <h2 className="text-2xl font-bold text-white">{userProfile?.name}</h2>
+                      <p className="text-streek-neon font-mono mt-1 text-lg">@{userProfile?.streekx_id}</p>
+                      <button 
+                         onClick={() => handleNavClick('profile')}
+                         className="mt-4 text-sm text-streek-muted hover:text-white flex items-center gap-1"
+                      >
+                         View Profile <ArrowRightIcon className="w-3 h-3" />
+                      </button>
+                   </div>
+
+                   {/* 2. History Section */}
+                   <div className="w-full">
+                      <div className="flex items-center justify-between mb-4 px-2">
+                        <h3 className="text-streek-muted uppercase tracking-wider text-xs font-bold">Recent History</h3>
+                        <button onClick={() => handleNavClick('history')} className="text-streek-neon text-sm hover:underline">View All</button>
+                      </div>
+                      <div className="bg-streek-card rounded-2xl border border-[#333] overflow-hidden max-h-[300px] overflow-y-auto">
+                         {searchHistory.length > 0 ? (
+                           <div className="divide-y divide-[#333]">
+                             {searchHistory.slice(0, 5).map(item => (
+                               <button 
+                                 key={item.id}
+                                 onClick={() => handleNavClick('history')} // Navigate to history view or run search? Keeping simple for menu
+                                 className="w-full text-left p-4 hover:bg-[#252525] flex items-center gap-3 transition-colors"
+                               >
+                                  <HistoryIcon className="w-4 h-4 text-streek-muted" />
+                                  <span className="text-white line-clamp-1">{item.query}</span>
+                               </button>
+                             ))}
+                           </div>
+                         ) : (
+                           <div className="p-6 text-center text-streek-muted italic">No recent searches</div>
+                         )}
+                      </div>
+                   </div>
+
+                   {/* 3. Grid Navigation (Box Type Buttons) */}
+                   <div className="grid grid-cols-2 gap-4">
+                      <BoxButton 
+                         icon={<CreditCardIcon className="w-8 h-8" />} 
+                         label="Account" 
+                         onClick={() => handleNavClick('account')} 
+                      />
+                      <BoxButton 
+                         icon={<FolderIcon className="w-8 h-8" />} 
+                         label="Workspace" 
+                         onClick={() => handleNavClick('workspace')} 
+                      />
+                      <BoxButton 
+                         icon={<SettingsIcon className="w-8 h-8" />} 
+                         label="Preferences" 
+                         onClick={() => handleNavClick('preferences')} 
+                      />
+                      <BoxButton 
+                         icon={<ShieldIcon className="w-8 h-8" />} 
+                         label="Security" 
+                         onClick={() => handleNavClick('account')} 
+                      />
+                   </div>
+
+                   {/* 4. Logout Button */}
+                   <button 
+                     onClick={handleLogout}
+                     className="w-full py-4 rounded-xl border border-[#333] text-streek-muted hover:bg-[#1A1A1A] hover:text-red-500 hover:border-red-500/30 transition-all flex items-center justify-center gap-2 font-semibold"
+                   >
+                      <LogOutIcon className="w-5 h-5" /> Sign Out
+                   </button>
+
+                 </div>
+               </div>
             )}
           </div>
         </div>
